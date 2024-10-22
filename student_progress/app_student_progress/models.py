@@ -37,5 +37,21 @@ class Teacher(models.Model):
     
     def __str__(self):
         return self.name
+    def save(self, *args, **kwargs):
+        # Call the original save method
+        super().save(*args, **kwargs)
+        # Update teacher performance after saving student marks
+        if self.teacher_id:
+            self.update_teacher_performance()
 
+    def update_teacher_performance(self):
+        students = Student.objects.filter(teacher_id=self.teacher_id)
+        if students.exists():
+            total_performance = sum(student.percentage for student in students)
+            average_performance = total_performance / students.count()
+            self.teacher_id.performance = average_performance
+            self.teacher_id.save()
+
+    def __str__(self):
+        return f'{self.name} ({self.roll_no})'
 # Create your models here.

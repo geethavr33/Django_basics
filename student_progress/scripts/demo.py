@@ -1,23 +1,27 @@
 from app_student_progress.models import Student, Teacher
 
-def calculate_teacher_performance(teacher):
-    # Get all students taught by the given teacher
-    students = Student.objects.filter(teacher_id=teacher)
-    
-    # Calculate average performance
-    if students.exists():
-        total_performance = sum(student.percentage for student in students)
-        average_performance = total_performance / students.count()
-        return average_performance
-    return 0
+
+from app_student_progress.models import *
+from utils.utils import calculate_teacher_pass_percentage  # Import your models
+
+def update_teacher_performance():
+    teachers = Teacher.objects.all()  # Fetch all teachers
+ 
+    for teacher in teachers:
+        teacher_id = teacher.emp_id   # Assuming 'emp_id' is the field used for teacher identification
+        pass_percentage = calculate_teacher_pass_percentage(teacher_id)
+ 
+        # Update the performance field for the teacher
+        teacher.performance = pass_percentage
+        teacher.save()  # Save the updated performance in the database
+ 
+    print("Teacher performance updated successfully.")
+ 
 
 def run():
-    # Display the average performance of all teachers
-    teachers = Teacher.objects.all()
-    for teacher in teachers:
-        avg_performance = calculate_teacher_performance(teacher)
-        print(f'Teacher: {teacher.name}, Average Performance: {avg_performance:.2f}')
-
-# Call the run function to execute
+    print("Updating teacher performance...")
+    update_teacher_performance()
+ 
 if __name__ == "__main__":
     run()
+ 

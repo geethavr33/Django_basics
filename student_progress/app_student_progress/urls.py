@@ -1,6 +1,6 @@
 from django.urls import path,include
 # importing from views.py
-from .views import StudentCrudView, StudentFilterBySubjectAndTeacherView,StudentDetailView,TopperListView, StudentsAboveCutoffView, FailedStudentsListView,StudentsAboveAndBelowAverageView, SubjectWiseFailedListView,BestTeacherView, StudentsFailedInSubjectView,TopStudentsView
+from .views import StudentCrudView, StudentFilterBySubjectAndTeacherView,StudentDetailView,TopperListView, StudentsAboveCutoffView, FailedStudentsListView,StudentsAboveAndBelowAverageView, SubjectWiseFailedListView,BestTeacherView, StudentsFailedInSubjectView,TopStudentsView,SortByTeacher,GetTeacherDetails
  
 
 urlpatterns = [
@@ -16,5 +16,7 @@ urlpatterns = [
     path('teachers/performance/', BestTeacherView.as_view(), name='teacher-performance'),
     path('students/failed/<str:subject>/', StudentsFailedInSubjectView.as_view(), name='students-failed'),
     path('top-students/', TopStudentsView.as_view(), name='top_students'),
-
+    path('students/<str:class_teacher>', SortByTeacher.as_view(), name='class_teacherName'),
+    path('teacherdetails/<int:teacher_id>/', GetTeacherDetails.as_view(), name='teacher_details'),
+    
 ]

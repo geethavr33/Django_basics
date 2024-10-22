@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Student, Teacher  # Import Teacher model as well
-from .serializer import Student_serializer
+from .serializer import Student_serializer, Teacher_serializer
 from django.db.models import Avg, Q, F, Sum, Count, ExpressionWrapper, FloatField
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +11,7 @@ from rest_framework import status
 class StudentCrudView(APIView):
     # function to post data
     def post(self, request):
-        serializer = Student_serializer(data=request.data)
+        serializer = Student_serializer(data=request.data,many=True)
         
         if serializer.is_valid():
             serializer.save()  # Save the student instance
@@ -254,3 +254,39 @@ class TopStudentsView(APIView):
         # Serialize and return the student data
         top_students = students.values('roll_no', 'name', 'physics_marks', 'chemistry_marks', 'maths_marks', 'total_marks')
         return Response(top_students, status=status.HTTP_200_OK)
+
+
+# sort student by class Teacher/
+# students/<str:class_teacher>
+class SortByTeacher(APIView):
+    def get(self, request, class_teacher):
+        try:
+            # Fetch the teacher object (assuming teacher names are unique)
+            teacher = Teacher.objects.get(name=class_teacher)
+
+            # Filter students by teacher_id (foreign key)
+            students = Student.objects.filter(teacher_id=teacher)
+
+            # Serialize the student data
+            serializer = Student_serializer(students, many=True)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Teacher.DoesNotExist:
+            # Handle the case when the teacher does not exist
+            return Response({"error": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            # Handle any other exceptions
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetTeacherDetails(APIView):
+    def get(self,request,teacher_id):
+        try:
+            teacher=Teacher.objects.get(emp_id=teacher_id)
+            serializer=Teacher_serializer(teacher)
+            return Response({'Teacher':serializer.data},status=status.HTTP_200_OK)
+
+        except Teacher.DoesNotExist:
+           return Response({'error':'Teacher not found'},status=status.HTTP_404_NOT_FOUND)
+ 

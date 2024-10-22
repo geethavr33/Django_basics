@@ -1,11 +1,7 @@
 from django.shortcuts import render
-
-# importing models (DB)
-from .models import Student
+from .models import Student, Teacher  # Import Teacher model as well
 from .serializer import Student_serializer
-from django.db.models import Avg
-from django.db.models import Q,F,Avg,Sum, Count,ExpressionWrapper, FloatField
-# importing modules from rest_framework
+from django.db.models import Avg, Q, F, Sum, Count, ExpressionWrapper, FloatField
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -34,7 +30,7 @@ class StudentFilterBySubjectAndTeacherView(APIView):
     def get(self, request):
         # Get query parameters for filtering
         subject = request.query_params.get('subject', None)
-        class_teacher = request.query_params.get('class_teacher', None)
+        teacher_id = request.query_params.get('teacher_id', None)  # Changed from class_teacher to teacher_id
 
         if subject:
             if subject == 'physics':
@@ -58,20 +54,20 @@ class StudentFilterBySubjectAndTeacherView(APIView):
             else:
                 return Response({"error": "Invalid subject"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # If filtering by class teacher
-        elif class_teacher:
-            students = Student.objects.filter(class_teacher=class_teacher).order_by('name')
+        # If filtering by teacher (changed to use teacher_id instead of class_teacher)
+        elif teacher_id:
+            students = Student.objects.filter(teacher_id=teacher_id).order_by('name')
             serializer = Student_serializer(students, many=True)
             data = serializer.data
 
         # If no filtering provided, return error
         else:
-            return Response({"error": "Please provide either subject or class_teacher parameter"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Please provide either subject or teacher_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Return filtered data
-        return Response(data, status=status.HTTP_200_OK)\
-        
+        return Response(data, status=status.HTTP_200_OK)
 
+        
 class StudentDetailView(APIView):
     def get_student(self, roll_no):
         try:
@@ -102,6 +98,7 @@ class StudentDetailView(APIView):
         student.delete()
         return Response({"message": "Student deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
 class TopperListView(APIView):
     def get(self, request):
         # Get the topper(s) with the highest total marks
@@ -125,6 +122,7 @@ class FailedStudentsListView(APIView):
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class SubjectWiseFailedListView(APIView):
     def get(self, request):
         subject = request.query_params.get('subject', None)
@@ -141,6 +139,7 @@ class SubjectWiseFailedListView(APIView):
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class StudentsAboveCutoffView(APIView):
     def get(self, request):
         cutoff = request.query_params.get('cutoff', 150)  # Default cutoff = 150
@@ -156,6 +155,7 @@ class StudentsAboveCutoffView(APIView):
 
         serializer = Student_serializer(students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class StudentsAboveAndBelowAverageView(APIView):
     def get(self, request):
@@ -197,29 +197,25 @@ class BestTeacherView(APIView):
                 Q(chemistry_marks__gte=passing_marks) &
                 Q(maths_marks__gte=passing_marks)
             )
-            .values('class_teacher')
+            .values('teacher_id')  # Use 'teacher_id' instead of 'class_teacher'
             .annotate(
-                passed_students=Count('roll_no'),   # Count of students who passed
-                total_students=Count('class_teacher')  # Count of total students per teacher
+                passed_students=Count('roll_no'),
+                total_students=Count('teacher_id')  # Use 'teacher_id' instead of 'class_teacher'
             )
-            .order_by('-passed_students')  # Order by count of passed students descending
+            .order_by('-passed_students')
         )
-        
-        # Get the teacher with the maximum number of passed students
+
         if best_teacher_data.exists():
-            best_teacher = best_teacher_data.first()  # Get the best teacher's data
+            best_teacher = best_teacher_data.first()
+            teacher = Teacher.objects.get(employee_id=best_teacher['teacher_id'])  # Fetch Teacher instance
             response_data = {
-                "best_teacher": best_teacher['class_teacher'],
+                "best_teacher": teacher.name,  # Get the teacher's name from Teacher model
                 "passed_students": best_teacher['passed_students'],
-                "total_students": best_teacher['total_students'],  # Total students for that teacher
+                "total_students": best_teacher['total_students'],
             }
             return Response(response_data, status=status.HTTP_200_OK)
 
         return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
-
-
-
-
 
 class StudentsFailedInSubjectView(APIView):
     def get(self, request, subject):
@@ -229,23 +225,32 @@ class StudentsFailedInSubjectView(APIView):
         # Create filter condition based on the subject
         if subject == 'physics':
             failed_students = Student.objects.filter(physics_marks__lt=passing_marks)
+        
         elif subject == 'chemistry':
             failed_students = Student.objects.filter(chemistry_marks__lt=passing_marks)
         elif subject == 'maths':
             failed_students = Student.objects.filter(maths_marks__lt=passing_marks)
         else:
-            return Response({"error": "Invalid subject provided."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid subject"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Serialize the list of students who failed in the specified subject
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+class TopperListView(APIView):
+    def get(self, request):
+        # Get the topper(s) with the highest total marks
+        topper = Student.objects.order_by('-physics_marks', '-chemistry_marks', '-maths_marks').first()
+        if topper:
+            serializer = Student_serializer(topper)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
 class TopStudentsView(APIView):
     def get(self, request):
         # Calculate total marks for each student
         students = Student.objects.annotate(
             total_marks=F('physics_marks') + F('chemistry_marks') + F('maths_marks')
         ).order_by('-total_marks')[:10]  # Order by total marks and take the top 10
-        
+
         # Serialize and return the student data
         top_students = students.values('roll_no', 'name', 'physics_marks', 'chemistry_marks', 'maths_marks', 'total_marks')
-        return Response(top_students)
+        return Response(top_students, status=status.HTTP_200_OK)

@@ -8,6 +8,5 @@ class Student_serializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields=[
-            'roll_no','name','physics_marks','chemistry_marks','maths_marks','class_teacher','total_marks','percentage'
+            'roll_no','name','physics_marks','chemistry_marks','maths_marks','teacher_id','total_marks','percentage'
             ]
-        

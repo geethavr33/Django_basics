@@ -10,7 +10,7 @@ def update_teacher_performance():
     for teacher in teachers:
         teacher_id = teacher.emp_id   # Assuming 'emp_id' is the field used for teacher identification
         pass_percentage = calculate_teacher_pass_percentage(teacher_id)
- 
+        print(f"Teacher: {teacher.name}, Pass Percentage: {pass_percentage}")      
         # Update the performance field for the teacher
         teacher.performance = pass_percentage
         teacher.save()  # Save the updated performance in the database

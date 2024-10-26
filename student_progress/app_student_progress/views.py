@@ -13,7 +13,7 @@ from app_student_progress.models import Teacher
 # Create your views here.
 
 class StudentCrudView(APIView):
-    # function to post data
+    # function to createstudent data
     def post(self, request):
         serializer = Student_serializer(data=request.data,many=True)
         
@@ -29,7 +29,7 @@ class StudentCrudView(APIView):
         serializer = Student_serializer(students, many=True)  # Serialize the list of students
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+#function to filter student by subject and Teacher
 class StudentFilterBySubjectAndTeacherView(APIView):
     def get(self, request):
         # Get query parameters for filtering
@@ -72,6 +72,7 @@ class StudentFilterBySubjectAndTeacherView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
         
+#function for getting student details by id
 class StudentDetailView(APIView):
     def get_student(self, roll_no):
         try:
@@ -102,7 +103,7 @@ class StudentDetailView(APIView):
         student.delete()
         return Response({"message": "Student deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-
+# Function to get the topper
 class TopperListView(APIView):
     def get(self, request):
         # Get the topper(s) with the highest total marks
@@ -112,7 +113,7 @@ class TopperListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
 
-
+# Function to get all failed students
 class FailedStudentsListView(APIView):
     def get(self, request):
         # Get students who have failed in any subject (assuming cutoff for passing is 35)
@@ -126,11 +127,11 @@ class FailedStudentsListView(APIView):
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+# function to get subject wise Failed list view
 class SubjectWiseFailedListView(APIView):
     def get(self, request):
         subject = request.query_params.get('subject', None)
-
+# pass mark is fixed ad 35
         if subject == 'physics':
             failed_students = Student.objects.filter(physics_marks__lt=35).order_by('name')
         elif subject == 'chemistry':
@@ -143,7 +144,7 @@ class SubjectWiseFailedListView(APIView):
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+# Function to get Student above cutoff
 class StudentsAboveCutoffView(APIView):
     def get(self, request):
         cutoff = request.query_params.get('cutoff', 150)  # Default cutoff = 150
@@ -160,7 +161,7 @@ class StudentsAboveCutoffView(APIView):
         serializer = Student_serializer(students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+# function to seperate students by average
 class StudentsAboveAndBelowAverageView(APIView):
     def get(self, request):
         # Calculate average total marks of all students
@@ -190,6 +191,7 @@ class StudentsAboveAndBelowAverageView(APIView):
             "students_above_average": above_avg_serializer.data
         }, status=status.HTTP_200_OK)
 
+#Function to get the best teacher
 
 class BestTeacherView(APIView):
     def get(self, request):
@@ -201,19 +203,20 @@ class BestTeacherView(APIView):
                 Q(chemistry_marks__gte=passing_marks) &
                 Q(maths_marks__gte=passing_marks)
             )
-            .values('teacher_id')  # Use 'teacher_id' instead of 'class_teacher'
+            .values('teacher_id')  # Using 'teacher_id' to group by teacher
             .annotate(
-                passed_students=Count('roll_no'),
-                total_students=Count('teacher_id')  # Use 'teacher_id' instead of 'class_teacher'
+                passed_students=Count('roll_no'),  # Count passed students
+                total_students=Count('teacher_id')  # Count total students under the same teacher
             )
-            .order_by('-passed_students')
+            .order_by('-passed_students')  # Order by the count of passed students
         )
 
         if best_teacher_data.exists():
             best_teacher = best_teacher_data.first()
-            teacher = Teacher.objects.get(employee_id=best_teacher['teacher_id'])  # Fetch Teacher instance
+            # Fetch Teacher instance using the correct primary key field
+            teacher = Teacher.objects.get(emp_id=best_teacher['teacher_id'])  # Changed from employee_id to emp_id
             response_data = {
-                "best_teacher": teacher.name,  # Get the teacher's name from Teacher model
+                "best_teacher": teacher.name,  # Get the teacher's name from the Teacher model
                 "passed_students": best_teacher['passed_students'],
                 "total_students": best_teacher['total_students'],
             }
@@ -221,6 +224,7 @@ class BestTeacherView(APIView):
 
         return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
 
+#Function to get the list of students who failed in a specific subject
 class StudentsFailedInSubjectView(APIView):
     def get(self, request, subject):
         # Set passing marks
@@ -240,6 +244,122 @@ class StudentsFailedInSubjectView(APIView):
         # Serialize the list of students who failed in the specified subject
         serializer = Student_serializer(failed_students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+# Function to get the list of students who passed in all subjects
+class StudentsPassedInAllSubjectsView(APIView):
+    def get(self, request):
+        # Get students who passed in all subjects (assuming cutoff for passing is 35)
+        passing_marks = 35
+        passed_students = Student.objects.filter(
+            Q(physics_marks__gte=passing_marks) &
+            Q(chemistry_marks__gte=passing_marks) &
+            Q(maths_marks__gte=passing_marks)
+        ).order_by('name')
+        
+        serializer = Student_serializer(passed_students, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK) 
+
+# Function to get the list of students who failed in all subjects
+class StudentsFailedInAllSubjectsView(APIView):
+    def get(self, request):
+        # Get students who failed in all subjects (assuming cutoff for passing is 35)
+        passing_marks = 35
+        failed_students = Student.objects.filter(
+            Q(physics_marks__lt=passing_marks) |
+            Q(chemistry_marks__lt=passing_marks) |
+            Q(maths_marks__lt=passing_marks)
+        ).order_by('name')
+
+        serializer = Student_serializer(failed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)    
+
+# Function to get the list of students who passed in a specific subject
+class StudentsPassedInSubjectView(APIView):
+    def get(self, request, subject):
+        # Set passing marks
+        passing_marks = 35
+
+        # Create filter condition based on the subject
+        if subject == 'physics':
+            passed_students = Student.objects.filter(physics_marks__gte=passing_marks)
+
+        elif subject == 'chemistry':
+            passed_students = Student.objects.filter(chemistry_marks__gte=passing_marks)
+        elif subject == 'maths':
+            passed_students = Student.objects.filter(maths_marks__gte=passing_marks)
+        else:
+            return Response({"error": "Invalid subject"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Serialize the list of students who passed in the specified subject
+        serializer = Student_serializer(passed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)   
+
+# Function to get the list of students who passed in at least one subject
+class StudentsPassedInAtLeastOneSubjectView(APIView):
+    def get(self, request):
+        # Get students who passed in at least one subject (assuming cutoff for passing is 35)
+        passing_marks = 35
+        passed_students = Student.objects.filter(
+            Q(physics_marks__gte=passing_marks) |
+            Q(chemistry_marks__gte=passing_marks) |
+            Q(maths_marks__gte=passing_marks)
+        ).order_by('name')
+
+        serializer = Student_serializer(passed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)        
+
+# Function to get the list of students who failed in at least one subject
+class StudentsFailedInAtLeastOneSubjectView(APIView):
+    def get(self, request):
+        # Get students who failed in at least one subject (assuming cutoff for passing is 35)
+        passing_marks = 35
+        failed_students = Student.objects.filter(
+            Q(physics_marks__lt=passing_marks) |
+            Q(chemistry_marks__lt=passing_marks) |
+            Q(maths_marks__lt=passing_marks)
+        ).order_by('name')
+
+        serializer = Student_serializer(failed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# Function to get the list of students who passed in a specific subject
+class StudentsPassedInSubjectView(APIView):
+    def get(self, request, subject):
+        # Set passing marks
+        passing_marks = 35
+
+        # Create filter condition based on the subject
+        if subject == 'physics':
+            passed_students = Student.objects.filter(physics_marks__gte=passing_marks)
+
+        elif subject == 'chemistry':
+            passed_students = Student.objects.filter(chemistry_marks__gte=passing_marks)
+        elif subject == 'maths':
+            passed_students = Student.objects.filter(maths_marks__gte=passing_marks)
+        else:
+            return Response({"error": "Invalid subject"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Serialize the list of students who passed in the specified subject
+        serializer = Student_serializer(passed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK) 
+
+# Function to get the list of students who passed in at least one subject
+class StudentsPassedInAtLeastOneSubjectView(APIView):
+    def get(self, request):
+        # Get students who passed in at least one subject (assuming cutoff for passing is 35)
+        passing_marks = 35
+        passed_students = Student.objects.filter(
+            Q(physics_marks__gte=passing_marks) |
+            Q(chemistry_marks__gte=passing_marks) |
+            Q(maths_marks__gte=passing_marks)
+        ).order_by('name')
+
+        serializer = Student_serializer(passed_students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)  
+
+     
+#function to get the Toppers
 class TopperListView(APIView):
     def get(self, request):
         # Get the topper(s) with the highest total marks
@@ -248,15 +368,18 @@ class TopperListView(APIView):
             serializer = Student_serializer(topper)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
+
+#Function to get Top Student details
+
 class TopStudentsView(APIView):
     def get(self, request):
         # Calculate total marks for each student
         students = Student.objects.annotate(
-            total_marks=F('physics_marks') + F('chemistry_marks') + F('maths_marks')
-        ).order_by('-total_marks')[:10]  # Order by total marks and take the top 10
+            calculated_total_marks=F('physics_marks') + F('chemistry_marks') + F('maths_marks')
+        ).order_by('-calculated_total_marks')[:10]  # Order by total marks and take the top 10
 
         # Serialize and return the student data
-        top_students = students.values('roll_no', 'name', 'physics_marks', 'chemistry_marks', 'maths_marks', 'total_marks')
+        top_students = students.values('roll_no', 'name', 'physics_marks', 'chemistry_marks', 'maths_marks', 'calculated_total_marks')
         return Response(top_students, status=status.HTTP_200_OK)
 
 
@@ -284,6 +407,7 @@ class SortByTeacher(APIView):
             # Handle any other exceptions
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+# Get teacher details
 class GetTeacherDetails(APIView):
     def get(self,request,teacher_id):
         try:

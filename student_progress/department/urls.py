@@ -1,7 +1,16 @@
 from django.urls import path
-from .views import DepartmentListCreateView, DepartmentRetrieveUpdateDeleteView
+from .views import  (
+    DepartmentListView,
+    DepartmentCreateView,
+    DepartmentRetrieveView,
+    DepartmentUpdateView,
+    DepartmentDeleteView,
+)
 
 urlpatterns = [
-    path('', DepartmentListCreateView.as_view(), name='department-list-create'),  # GET and POST
-    path('<int:pk>/', DepartmentRetrieveUpdateDeleteView.as_view(), name='department-detail'),  # GET, PUT, DELETE
+    path('departments/', DepartmentListView.as_view(), name='department-list'),
+    path('departments/create/', DepartmentCreateView.as_view(), name='department-create'),
+    path('departments/<int:pk>/', DepartmentRetrieveView.as_view(), name='department-detail'),
+    path('departments/<int:pk>/update/', DepartmentUpdateView.as_view(), name='department-update'),
+    path('departments/<int:pk>/delete/', DepartmentDeleteView.as_view(), name='department-delete'),
 ]

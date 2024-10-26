@@ -5,7 +5,7 @@ from django.utils import timezone
 # Create your models here.
 class Student(models.Model):
     name=models.CharField(max_length=50)
-    roll_no=models.IntegerField(primary_key=True)
+    roll_no=models.AutoField(primary_key=True)
     maths_marks=models.FloatField()
     chemistry_marks=models.FloatField()
     physics_marks=models.FloatField()
@@ -28,15 +28,16 @@ class Student(models.Model):
  # app_student_progress/models.py
 class Teacher(models.Model):
     name = models.CharField(max_length=50)
-    emp_id = models.IntegerField(primary_key=True)
+    emp_id = models.AutoField(primary_key=True)
     performance = models.FloatField(default=0)
     
     # Foreign Key to School
     sc_id = models.ForeignKey('school.School', on_delete=models.DO_NOTHING,null=True,blank=True)
     
     # Foreign Key to Department (for normal department association)
-    depart_id = models.ForeignKey('department.Department', on_delete=models.DO_NOTHING, null=True, blank=True)
-    
+    #depart_id = models.ForeignKey('department.Department', on_delete=models.DO_NOTHING, null=True, blank=True)
+    depart_id = models.IntegerField(null=True, blank=True)
+
     # Foreign Key for HOD designation (distinct from normal department association)
     #hod = models.ForeignKey('app_student_progress.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='department_hod')
 

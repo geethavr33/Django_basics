@@ -10,7 +10,7 @@ from django.forms import ValidationError
 class Department(models.Model):
     name=models.CharField(max_length=100)
     hod = models.ForeignKey('app_student_progress.Teacher',on_delete=models.DO_NOTHING,null=True,blank=True)
-    dept_id=models.IntegerField(primary_key=True)
+    dept_id=models.AutoField(primary_key=True)
     sc_id = models.ForeignKey('school.School', on_delete=models.DO_NOTHING,null=True,blank=True)
     
 

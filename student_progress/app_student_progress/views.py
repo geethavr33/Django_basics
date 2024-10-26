@@ -5,6 +5,10 @@ from django.db.models import Avg, Q, F, Sum, Count, ExpressionWrapper, FloatFiel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from app_student_progress.models import Teacher
 
 # Create your views here.
 
@@ -289,4 +293,54 @@ class GetTeacherDetails(APIView):
 
         except Teacher.DoesNotExist:
            return Response({'error':'Teacher not found'},status=status.HTTP_404_NOT_FOUND)
+        
+
+# Class to handle GET (List all teachers)
+class TeacherListView(APIView):
+    def get(self, request):
+        teachers = Teacher.objects.all()
+        serializer = Teacher_serializer(teachers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# Class to handle POST (Create a new teacher)
+class TeacherCreateView(APIView):
+    def post(self, request):
+        serializer = Teacher_serializer(data=request.data,many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Class to handle GET (Retrieve a specific teacher)
+class TeacherRetrieveView(APIView):
+    def get(self, request, pk):
+        try:
+            teacher = Teacher.objects.get(pk=pk)
+            serializer = Teacher_serializer(teacher)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Teacher.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+# Class to handle PUT (Update a specific teacher)
+class TeacherUpdateView(APIView):
+    def put(self, request, pk):
+        try:
+            teacher = Teacher.objects.get(pk=pk)
+            serializer = Teacher_serializer(teacher, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Teacher.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+# Class to handle DELETE (Delete a specific teacher)
+class TeacherDeleteView(APIView):
+    def delete(self, request, pk):
+        try:
+            teacher = Teacher.objects.get(pk=pk)
+            teacher.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Teacher.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
  

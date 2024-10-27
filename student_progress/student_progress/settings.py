@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'app_student_progress',
     'school', 
     'department',
+    'app_teacher',
     'rest_framework',
     'django_extensions']
 

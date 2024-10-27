@@ -12,15 +12,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Student',
+            name='Teacher',
             fields=[
                 ('name', models.CharField(max_length=50)),
-                ('roll_no', models.AutoField(primary_key=True, serialize=False)),
-                ('maths_marks', models.FloatField()),
-                ('chemistry_marks', models.FloatField()),
-                ('physics_marks', models.FloatField()),
-                ('total_marks', models.FloatField(blank=True, editable=False, null=True)),
-                ('percentage', models.FloatField(blank=True, editable=False, null=True)),
+                ('emp_id', models.AutoField(primary_key=True, serialize=False)),
+                ('performance', models.FloatField(default=0)),
                 ('created_on', models.DateTimeField(auto_now_add=True)),
                 ('updated_on', models.DateTimeField(auto_now=True)),
             ],

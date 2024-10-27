@@ -13,7 +13,7 @@ class Department(models.Model):
     # Foreign key relationship with the Teacher model to indicate the Head of Department (HOD)
     # On deletion, do nothing if the referenced teacher is deleted
 
-    hod = models.ForeignKey('app_student_progress.Teacher',on_delete=models.DO_NOTHING,null=True,blank=True)
+    hod = models.ForeignKey('app_teacher.Teacher',on_delete=models.DO_NOTHING,null=True,blank=True)
     # Auto-incrementing primary key for the department
     dept_id=models.AutoField(primary_key=True)
     # Foreign key relationship with the School model to indicate which school the department belongs to

@@ -55,7 +55,7 @@ Response (200 OK):
     "updated_on": "2024-10-26T12:34:56Z"
 }
 ```________________________________________
-3. Update a Student by Roll Number
+# 3. Update a Student by Roll Number
 •	Endpoint: /students/<roll_no>/
 •	Method: PUT
 •	Description: Updates an existing Student. The fields total_marks and percentage are recalculated upon saving.
@@ -66,7 +66,7 @@ Request Body (JSON):
     "maths_marks": 90.0,
 ```
 ________________________________________
-3. Update a Student by Roll Number (continued)
+# 4. Update a Student by Roll Number (continued)
 •	Endpoint: /students/<roll_no>/
 •	Method: PUT
 •	Description: Updates an existing Student record by their roll number. The fields total_marks and percentage are recalculated upon saving.
@@ -95,7 +95,7 @@ json
 }
 ```
 ________________________________________
- 4. Delete a Student by Roll Number
+## 5. Delete a Student by Roll Number
 * Endpoint: /students/<roll_no>/
 * Method: DELETE
 * Description: Deletes a Student entry by roll_no.
@@ -104,7 +104,7 @@ json
 {}
 _________________________________________
 
-2. StudentFilterBySubjectAndTeacherView
+## 6. StudentFilterBySubjectAndTeacherView
 * GET /students/filter/?subject=maths
 * Filter students by highest marks in a specified subject.
 
@@ -116,7 +116,8 @@ Filter students by the specified teacher.
 Response:
 #### 200 OK: Returns filtered students based on the criteria.
 #### 400 Bad Request: Returns an error if invalid parameters are provided.
-## 3. StudentDetailView
+
+## 7. StudentDetailView
 ### PUT /students/<roll_no>/
 Update student details.
 ### Request Body:
@@ -126,21 +127,21 @@ Update student details.
     "maths_marks": 80
 }
 ```
-## Delete a student by roll number.
+## 8.Delete a student by roll number.
 DELETE /students/<roll_no>/
 
 Response:
 #### 204 No Content: Student successfully deleted.
 #### 404 Not Found: If student does not exist.
 
-## 4. TopperListView
+## 9. TopperListView
 GET /students/topper/
 ### Retrieve the student with the highest marks.
 
 Response:
 #### 200 OK: Returns the topper’s data.
 #### 404 Not Found: If no students are found.
-### 5. FailedStudentsListView
+### 10. FailedStudentsListView
 ### GET /students/failed/
 Retrieve students who failed in any subject.
 
@@ -148,7 +149,7 @@ Response:
 * 200 OK: Returns a list of failed students.
 * 400 Bad Request: Returns an error if data retrieval fails.
   
-## 1. SubjectWiseFailedListView
+## 11. SubjectWiseFailedListView
 * GET /students/failed/subject/?subject=maths
 * Retrieve students who failed in a specified subject.
 
@@ -158,7 +159,7 @@ Response:
 * 200 OK: Returns a list of failed students for the given subject.
 * 400 Bad Request: Returns an error if the subject is invalid or missing.
   
-## 1. StudentsAboveCutoffView
+## 12. StudentsAboveCutoffView
 GET /students/above_cutoff/?cutoff=150
 ##### Retrieve students whose total marks exceed a specified cutoff.
 
@@ -169,14 +170,14 @@ cutoff (optional): Total cutoff marks (default is 150).
 
 * 200 OK: Returns a list of students above the cutoff.
   
-## 9. StudentsAboveAndBelowAverageView
+## 13. StudentsAboveAndBelowAverageView
 GET /students/average/
 * Retrieve students who scored above and below average.
 
 Response:
 * 200 OK: Returns a JSON object with average_marks, students_below_average, and students_above_average.
 
-## 9. StudentsFailedInSubjectView
+## 14. StudentsFailedInSubjectView
 
 GET /students/failed/<subject>/
 ##### Retrieve students who failed in a specific subject.
@@ -189,20 +190,20 @@ Response:
 * 200 OK: Returns a list of failed students for the specified subject.
 * 400 Bad Request: Returns an error if the subject is invalid.
   
-## 10.  StudentsPassedInAllSubjectsView
+## 15.  StudentsPassedInAllSubjectsView
 GET /students/passed_all/
 ### Retrieve students who passed all subjects.
 
 Response:
 * 200 OK: Returns a list of students who passed all subjects.
-## 11. StudentsFailedInAllSubjectsView
+## 16. StudentsFailedInAllSubjectsView
 GET /students/failed_all/
 #### Retrieve students who failed in all subjects.
 
 Response:
 * 200 OK: Returns a list of students who failed all subjects.
   
-## 1.  StudentsPassedInSubjectView
+## 17.  StudentsPassedInSubjectView
 GET /students/passed/<subject>/
 ### Retrieve students who passed in a specific subject.
 
@@ -213,21 +214,21 @@ subject: physics, chemistry, or maths.
 
 * 200 OK: Returns a list of students who passed in the specified subject.
 
-### 13.StudentsPassedInAtLeastOneSubjectView
+### 18.StudentsPassedInAtLeastOneSubjectView
 GET /students/passed_at_least_one/
 ### Retrieve students who passed in at least one subject.
 
 Response:
 * 200 OK: Returns a list of students who passed at least one subject.
 
-## 14. StudentsFailedInAtLeastOneSubjectView
+## 19. StudentsFailedInAtLeastOneSubjectView
 GET /students/failed_at_least_one/
 ### Retrieve students who failed in at least one subject.
 
 Response:
 * 200 OK: Returns a list of students who failed in at least one subject.
   
-## 15. TopStudentsView
+## 20. TopStudentsView
 
 GET /students/top_students/
 ### Retrieve the top 10 students based on total marks.

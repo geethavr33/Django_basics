@@ -6,7 +6,17 @@ from django.forms import ValidationError
 # Created Department model .
 # from app_student_progress.models import Teacher
  
-
+class ActiveManager(models.Manager):
+    def  get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+    def active_count(self):
+       return self.get_queryset().count()
+   
+    def get_active(self):
+      return self.get_queryset().filter(is_active=True)
+   
+    def get_inactive(self):
+        return self.get_queryset().filter(is_active=False)
 class Department(models.Model):
     # Name of the department, maximum length is 100 character
     name=models.CharField(max_length=100)
@@ -27,6 +37,10 @@ class Department(models.Model):
     # Timestamp for when the department is last updated, automatically updated to the current time
    
     updated_on = models.DateTimeField(auto_now=True)
+    is_active=models.BooleanField(default=True)
+ 
+    objects = models.Manager()  # The default manager
+    active_objects = ActiveManager()
 
     def save(self, *args, **kwargs):
         # Check if another department has the same HOD

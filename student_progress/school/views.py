@@ -1,6 +1,14 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from app_student_progress.models import Student
+from app_student_progress.serializer import Student_serializer
+from app_teacher.models import Teacher
+from app_teacher.serializer import Teacher_serializer
+from department.models import Department
+from department.serializers import DepartmentSerializer
 from .models import School
 from .serializers import SchoolSerializer
 
@@ -52,3 +60,54 @@ class SchoolRetrieveUpdateDeleteView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except School.DoesNotExist:
             return Response({"error": "School not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# School Detail View (Retrieve, Update, Delete)
+class SchoolDetailView(APIView):
+    def get(self, request, school_id):
+        school = get_object_or_404(School, school_id=school_id)
+        serializer = SchoolSerializer(school)
+        return Response(serializer.data)
+
+    def put(self, request, school_id):
+        school = get_object_or_404(School, school_id=school_id)
+        serializer = SchoolSerializer(school, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, school_id):
+        school = get_object_or_404(School, school_id=school_id)
+        school.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# Departments Under School View (only active departments)
+class DepartmentsUnderSchoolView(APIView):
+    def get(self, request, school_id):
+        departments = Department.active_objects.filter(sc_id=school_id)
+        serializer = DepartmentSerializer(departments, many=True)
+        return Response({
+            "count": departments.count(),
+            "active_departments": serializer.data
+        })
+
+# Teachers Under School View (only active teachers)
+class TeachersUnderSchoolView(APIView):
+    def get(self, request, school_id):
+        teachers = Teacher.active_objects.filter(sc_id=school_id)
+        serializer = Teacher_serializer(teachers, many=True)
+        return Response({
+            "count": teachers.count(),
+            "active_teachers": serializer.data
+        })
+
+# Students Under School View (only active students)
+class StudentsUnderSchoolView(APIView):
+    def get(self, request, school_id):
+        students = Student.active_objects.filter(teacher_id__sc_id=school_id)
+        serializer = Student_serializer(students, many=True)
+        return Response({
+            "count": students.count(),
+            "active_students": serializer.data
+        })

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Student, Teacher  # Import Teacher model as well
-from .serializer import Student_serializer, Teacher_serializer
+from .serializer import Student_serializer
 from django.db.models import Avg, Q, F, Sum, Count, ExpressionWrapper, FloatField
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from app_student_progress.models import Teacher
+#from app_teacher.models import Teacher
 
 # Create your views here.
 
@@ -193,36 +193,6 @@ class StudentsAboveAndBelowAverageView(APIView):
 
 #Function to get the best teacher
 
-class BestTeacherView(APIView):
-    def get(self, request):
-        # Get the teacher with the most students who passed all subjects (assuming cutoff for passing is 35)
-        passing_marks = 35
-        best_teacher_data = (
-            Student.objects.filter(
-                Q(physics_marks__gte=passing_marks) &
-                Q(chemistry_marks__gte=passing_marks) &
-                Q(maths_marks__gte=passing_marks)
-            )
-            .values('teacher_id')  # Using 'teacher_id' to group by teacher
-            .annotate(
-                passed_students=Count('roll_no'),  # Count passed students
-                total_students=Count('teacher_id')  # Count total students under the same teacher
-            )
-            .order_by('-passed_students')  # Order by the count of passed students
-        )
-
-        if best_teacher_data.exists():
-            best_teacher = best_teacher_data.first()
-            # Fetch Teacher instance using the correct primary key field
-            teacher = Teacher.objects.get(emp_id=best_teacher['teacher_id'])  # Changed from employee_id to emp_id
-            response_data = {
-                "best_teacher": teacher.name,  # Get the teacher's name from the Teacher model
-                "passed_students": best_teacher['passed_students'],
-                "total_students": best_teacher['total_students'],
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
-
-        return Response({"message": "No students found"}, status=status.HTTP_404_NOT_FOUND)
 
 #Function to get the list of students who failed in a specific subject
 class StudentsFailedInSubjectView(APIView):
@@ -407,64 +377,13 @@ class SortByTeacher(APIView):
             # Handle any other exceptions
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-# Get teacher details
-class GetTeacherDetails(APIView):
-    def get(self,request,teacher_id):
+# API to mark a student as inactive
+class InactivateStudentView(APIView):
+    def put(self, request, student_id):
         try:
-            teacher=Teacher.objects.get(emp_id=teacher_id)
-            serializer=Teacher_serializer(teacher)
-            return Response({'Teacher':serializer.data},status=status.HTTP_200_OK)
-
-        except Teacher.DoesNotExist:
-           return Response({'error':'Teacher not found'},status=status.HTTP_404_NOT_FOUND)
-        
-
-# Class to handle GET (List all teachers)
-class TeacherListView(APIView):
-    def get(self, request):
-        teachers = Teacher.objects.all()
-        serializer = Teacher_serializer(teachers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-# Class to handle POST (Create a new teacher)
-class TeacherCreateView(APIView):
-    def post(self, request):
-        serializer = Teacher_serializer(data=request.data,many=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# Class to handle GET (Retrieve a specific teacher)
-class TeacherRetrieveView(APIView):
-    def get(self, request, pk):
-        try:
-            teacher = Teacher.objects.get(pk=pk)
-            serializer = Teacher_serializer(teacher)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-# Class to handle PUT (Update a specific teacher)
-class TeacherUpdateView(APIView):
-    def put(self, request, pk):
-        try:
-            teacher = Teacher.objects.get(pk=pk)
-            serializer = Teacher_serializer(teacher, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-# Class to handle DELETE (Delete a specific teacher)
-class TeacherDeleteView(APIView):
-    def delete(self, request, pk):
-        try:
-            teacher = Teacher.objects.get(pk=pk)
-            teacher.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
- 
+            student = Student.objects.get(roll_no=student_id)
+            student.is_active = False
+            student.save()
+            return Response({"message": f"Student {student.name} marked as inactive."}, status=status.HTTP_200_OK)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)

@@ -25,8 +25,8 @@ urlpatterns = [
     path('students/failed/', FailedStudentsListView.as_view(), name='failed-students'),  # URL for listing failed students
     path('students/average/', StudentsAboveAndBelowAverageView.as_view(), name='students-average'),  # URL for average comparison
     path('students/subjectwise_failed/', SubjectWiseFailedListView.as_view(), name='subjectwise-failed-students'),  # URL for subject-wise failures
-    path('students/failed/<str:subject>/', StudentsFailedInSubjectView.as_view(), name='students-failed'),  # URL for listing students failed in a specific subject
-    path('top-students/', TopStudentsView.as_view(), name='top_students'),  # URL for listing top-performing students
+    #path('students/failed/<str:subject>/', StudentsFailedInSubjectView.as_view(), name='students-failed'),  # URL for listing students failed in a specific subject
+    #path('top-students/', TopStudentsView.as_view(), name='top_students'),  # URL for listing top-performing students
     path('students/<str:class_teacher>/', SortByTeacher.as_view(), name='class_teacherName'),  # URL for sorting students by class teacher
     path('students/<int:student_id>/inactivate/', InactivateStudentView.as_view(), name='inactivate_student'),
 

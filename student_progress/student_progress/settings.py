@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-abm0(x(o5046b-5!qi%+qoo$b1qy0eri44kpf8+quo2-54gmgl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,8 +41,11 @@ INSTALLED_APPS = [
     'school', 
     'department',
     'app_teacher',
+    #'app_User',
+    'userapp_new',
     'rest_framework',
-    'django_extensions']
+    'rest_framework.authtoken',
+     'django_extensions']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -126,3 +129,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+
+}
+
+AUTH_USER_MODEL = 'userapp_new.UserNew'
+

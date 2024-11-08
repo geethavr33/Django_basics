@@ -1,22 +1,11 @@
 from django.db import models
 from django.forms import ValidationError
-
 # from School import models as school_model
 # from app_student_progress import models as Teacher_model
 # Created Department model .
 # from app_student_progress.models import Teacher
  
-class ActiveManager(models.Manager):
-    def  get_queryset(self):
-        return super().get_queryset().filter(is_active=True)
-    def active_count(self):
-       return self.get_queryset().count()
-   
-    def get_active(self):
-      return self.get_queryset().filter(is_active=True)
-   
-    def get_inactive(self):
-        return self.get_queryset().filter(is_active=False)
+
 class Department(models.Model):
     # Name of the department, maximum length is 100 character
     name=models.CharField(max_length=100)
@@ -26,11 +15,7 @@ class Department(models.Model):
     hod = models.ForeignKey('app_teacher.Teacher',on_delete=models.DO_NOTHING,null=True,blank=True)
     # Auto-incrementing primary key for the department
     dept_id=models.AutoField(primary_key=True)
-    # Foreign key relationship with the School model to indicate which school the department belongs to
-    # On deletion, do nothing if the referenced school is deleted
-
-    sc_id = models.ForeignKey('school.School', on_delete=models.DO_NOTHING,null=True,blank=True)
-    
+   
     # Timestamp for when the department is created, automatically set to the current time
     created_on = models.DateTimeField(auto_now_add=True)
     
@@ -39,21 +24,10 @@ class Department(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     is_active=models.BooleanField(default=True)
  
-    objects = models.Manager()  # The default manager
-    active_objects = ActiveManager()
-
-    def save(self, *args, **kwargs):
-        # Check if another department has the same HOD
-        # Raise a validation error if the HOD is already assigned to another department
-
-        if self.hod and Department.objects.filter(hod=self.hod).exclude(dept_id=self.dept_id).exists():
-            raise ValidationError(f'{self.hod} is already assigned as the HOD of another department.')
-        
-        # Call the superclass's save method to perform the actual saving of the model instance
-
-        super().save(*args, **kwargs)
-
+    
     def __str__(self):
         # Return the name of the department when the object is represented as a string
 
         return self.name
+
+

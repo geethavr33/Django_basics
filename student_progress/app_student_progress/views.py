@@ -12,22 +12,66 @@ from rest_framework import status
 
 # Create your views here.
 
-class StudentCrudView(APIView):
-    # function to createstudent data
+class Crud_All_Student(APIView):
+    def get(self, request, roll_no=None):
+       
+       
+        try:
+            #get student by iD
+            if roll_no:
+                try:
+                    student = Student.objects.get(roll_no=roll_no)
+                    serializer = Student_serializer(student)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                except Student.DoesNotExist:
+                    return Response({"error": "Student with the specific id not found"}, status=status.HTTP_400_BAD_REQUEST)
+           
+            #get all students
+            student =Student.objects.all()
+            serializer = Student_serializer(student, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+       
+ 
+   
     def post(self, request):
-        serializer = Student_serializer(data=request.data,many=True)
+        try:
+            # Create a new student task
+            serializer = Student_serializer(data=request.data)
+           
+            if serializer.is_valid():
+                serializer.save()  # Save the new student
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+           
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+           
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+       
+ 
+ 
+ 
+    def put(self, request, roll_no):
         
-        if serializer.is_valid():
-            serializer.save()  # Save the student instance
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)       
+        try:
+            student = Student.objects.get(roll_no=roll_no)
+            serializer = Student_serializer(student, data=request.data, partial=True)
+           
+            if serializer.is_valid():
+                serializer.save()  # Save the updated student
+                return Response(serializer.data, status=status.HTTP_200_OK)
+           
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+       
+        except Student.DoesNotExist:
+            return Response({"error": "Student with the specified roll number not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+ 
+ 
+
     
-    # function to list all data
-    def get(self, request):
-        students = Student.objects.all()  # Fetch all students
-        serializer = Student_serializer(students, many=True)  # Serialize the list of students
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 #function to filter student by subject and Teacher
 class StudentFilterBySubjectAndTeacherView(APIView):
@@ -73,36 +117,7 @@ class StudentFilterBySubjectAndTeacherView(APIView):
 
         
 #function for getting student details by id
-class StudentDetailView(APIView):
-    def get_student(self, roll_no):
-        try:
-            return Student.objects.get(roll_no=roll_no)
-        except Student.DoesNotExist:
-            return None
-
-    def put(self, request, roll_no):
-        # Find the student by roll_no
-        student = self.get_student(roll_no)
-        if student is None:
-            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Deserialize the request data and update student information
-        serializer = Student_serializer(student, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()  # Save the updated student
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, roll_no):
-        # Find the student by roll_no
-        student = self.get_student(roll_no)
-        if student is None:
-            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Delete the student
-        student.delete()
-        return Response({"message": "Student deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
+   
 # Function to get the topper
 class TopperListView(APIView):
     def get(self, request):
@@ -376,14 +391,4 @@ class SortByTeacher(APIView):
         except Exception as e:
             # Handle any other exceptions
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-# API to mark a student as inactive
-class InactivateStudentView(APIView):
-    def put(self, request, student_id):
-        try:
-            student = Student.objects.get(roll_no=student_id)
-            student.is_active = False
-            student.save()
-            return Response({"message": f"Student {student.name} marked as inactive."}, status=status.HTTP_200_OK)
-        except Student.DoesNotExist:
-            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+   

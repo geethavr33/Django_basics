@@ -9,9 +9,9 @@ class Student_admin(admin.ModelAdmin):
         'name',           # Display the student's name
         'roll_no',       # Display the student's roll number
         'teacher_id',    # Display the assigned teacher for the student
-        'physics_marks', # Display marks obtained in Physics
-        'chemistry_marks', # Display marks obtained in Chemistry
-        'maths_marks',   # Display marks obtained in Mathematics
+        #'physics_marks', # Display marks obtained in Physics
+        #'chemistry_marks', # Display marks obtained in Chemistry
+        #'maths_marks',   # Display marks obtained in Mathematics
         'total_marks',   # Display the total marks calculated
         'percentage'     # Display the percentage calculated
     )

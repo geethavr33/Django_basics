@@ -16,13 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+#from app_student_progress.views import home  # Import the home view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    #path('', home, name='home'),
     path('',include('app_student_progress.urls')),
     path('api/', include('app_student_progress.urls')),
     path('', include('app_teacher.urls')),
     path('', include('school.urls')),        # Routes /api/schools/ to school URLs
     path('', include('department.urls')), # Routes /api/departments/ to department URLs
-
-                 ]       
+    #path('users/',include('app_User.urls')),
+    path('userapp/',include('userapp_new.urls')),
+                ]       

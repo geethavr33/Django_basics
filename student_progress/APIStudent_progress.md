@@ -4,7 +4,7 @@ Here's the API documentation for managing Student progress, including their mark
 
 ## Base URL
 ```url
-http://<your-domain>/
+http://127.0.0.1:8000/
 ```
 
 ## End Points in this project

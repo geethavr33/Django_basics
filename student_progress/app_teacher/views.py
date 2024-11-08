@@ -1,128 +1,155 @@
-from django.shortcuts import render
-from .models import  Teacher  # Import Teacher model as well
+from django.shortcuts import get_object_or_404, render
 from app_student_progress.models import Student
+from department.models import Department
 from .serializer import  Teacher_serializer
-from django.db.models import Avg, Q, F, Sum, Count, ExpressionWrapper, FloatField
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from app_teacher.models import Teacher
+from .models import Teacher
+from django.db.models import Avg
 
-from django.db.models import Q, Count
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
 
-# View to find the best teacher with the most active students who passed all subjects
-class BestTeacherView(APIView):
-    def get(self, request):
-        passing_marks = 35
-        best_teacher_data = (
-            Student.objects.filter(
-                Q(is_active=True),
-                Q(physics_marks__gte=passing_marks),
-                Q(chemistry_marks__gte=passing_marks),
-                Q(maths_marks__gte=passing_marks)
-            )
-            .values('teacher_id')  
-            .annotate(
-                passed_students=Count('roll_no'),  
-                total_students=Count('teacher_id')  
-            )
-            .order_by('-passed_students')
-        )
-
-        if best_teacher_data.exists():
-            best_teacher = best_teacher_data.first()
-            teacher = Teacher.active_objects.get(emp_id=best_teacher['teacher_id'])
-            response_data = {
-                "best_teacher": teacher.name,
-                "passed_students": best_teacher['passed_students'],
-                "total_students": best_teacher['total_students'],
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
-
-        return Response({"message": "No active students found"}, status=status.HTTP_404_NOT_FOUND)
-
-# View to retrieve details of a specific active teacher by ID
-class GetTeacherDetails(APIView):
-    def get(self, request, teacher_id):
+class TeacherCrudOperations(APIView):
+    def get(self, request, emp_id=None):
         try:
-            teacher = Teacher.active_objects.get(emp_id=teacher_id)
-            serializer = Teacher_serializer(teacher)
-            return Response({'Teacher': serializer.data}, status=status.HTTP_200_OK)
-        except Teacher.DoesNotExist:
-            return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
-
-# View to list all active teachers
-class TeacherListView(APIView):
-    def get(self, request):
-        teachers = Teacher.active_objects.all()
-        serializer = Teacher_serializer(teachers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-# View to create a new teacher
-class TeacherCreateView(APIView):
+            if emp_id is not None:
+                try:
+                    teacher = Teacher.objects.get(emp_id=emp_id)
+                    serializer = Teacher_serializer(teacher)
+                    return Response(serializer.data)
+                except Teacher.DoesNotExist:
+                    return Response({"error":"id not found"},status=status.HTTP_400_BAD_REQUEST)
+           
+            # If no emp_id key, return all teachers
+            else:
+                teachers = Teacher.objects.all()
+                serializer = Teacher_serializer(teachers, many=True)
+                return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
+ 
     def post(self, request):
-        serializer = Teacher_serializer(data=request.data, many=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# View to retrieve a specific active teacher by primary key
-class TeacherRetrieveView(APIView):
-    def get(self, request, pk):
         try:
-            teacher = Teacher.active_objects.get(pk=pk)
-            serializer = Teacher_serializer(teacher)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-# View to update a specific active teacher
-class TeacherUpdateView(APIView):
-    def put(self, request, pk):
-        try:
-            teacher = Teacher.active_objects.get(pk=pk)
-            serializer = Teacher_serializer(teacher, data=request.data)
+            serializer = Teacher_serializer(data=request.data)
+           
+            # Validate the input data
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+           
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-# View to delete a specific active teacher
-class TeacherDeleteView(APIView):
-    def delete(self, request, pk):
+       
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+       
+    def put(self, request, emp_id=None):
         try:
-            teacher = Teacher.active_objects.get(pk=pk)
-            teacher.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            # Attempt to retrieve the existing teacher record
+            teacher = Teacher.objects.get(emp_id=emp_id)
         except Teacher.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Teacher does not exist"}, status=status.HTTP_404_NOT_FOUND)
+ 
+        # Initialize the serializer with the existing teacher's data and the updated data
+        serializer = Teacher_serializer(teacher, data=request.data, partial=True)  # Use partial=True to allow partial updates
+ 
+        # Validate the input data
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Teacher updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+       
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+ 
 
-# New API to retrieve the total number of active students for a specific teacher
 class TotalStudentsForTeacherView(APIView):
     def get(self, request, teacher_id):
         try:
-            teacher = Teacher.active_objects.get(emp_id=teacher_id)
+            teacher = Teacher.objects.get(emp_id=teacher_id)
             total_students = Student.objects.filter(teacher_id=teacher, is_active=True).count()
             return Response({"teacher_name": teacher.name, "total_students": total_students}, status=status.HTTP_200_OK)
         except Teacher.DoesNotExist:
             return Response({"error": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# API to mark a teacher as inactive
-class InactivateTeacherView(APIView):
-    def put(self, request, teacher_id):
+
+
+class TeacherPerformanceView(APIView):
+    def get(self, request, teacher_id):
         try:
             teacher = Teacher.objects.get(emp_id=teacher_id)
-            teacher.is_active = False
-            teacher.save()
-            return Response({"message": f"Teacher {teacher.name} marked as inactive."}, status=status.HTTP_200_OK)
+            students = Student.objects.filter(teacher_id=teacher, is_active=True)
+
+            if not students.exists():
+                return Response({"message": "No students assigned to this teacher."}, status=status.HTTP_200_OK)
+
+            # Calculate average total marks of active students
+            total_marks = sum(student.total_marks for student in students)
+            average_marks = total_marks / students.count()
+            
+            # Assume performance is based on average marks
+            performance = average_marks  # or another metric, if defined
+
+            return Response({
+                "teacher_name": teacher.name,
+                "average_total_marks": average_marks,
+                "performance": performance,
+            }, status=status.HTTP_200_OK)
+        
         except Teacher.DoesNotExist:
             return Response({"error": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+
+class BestTeacherView(APIView):
+    def get(self, request):
+        try:
+            # Get each teacher with the average total marks of their active students
+            teachers = Teacher.objects.annotate(average_marks=Avg('student__total_marks'))
+            
+            # Filter out teachers who do not have students or have a null average
+            teachers_with_avg = teachers.filter(average_marks__isnull=False)
+            
+            # Get the teacher with the highest average marks
+            best_teacher = teachers_with_avg.order_by('-average_marks').first()
+            
+            if best_teacher:
+                response_data = {
+                    "teacher_name": best_teacher.name,
+                    "teacher_id": best_teacher.emp_id,
+                    "average_student_marks": best_teacher.average_marks,
+                }
+                return Response(response_data, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "No teachers with students found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class BestTeacherByDepartmentView(APIView):
+    def get(self, request):
+        # Dictionary to store top teacher for each department
+        top_teachers = {}
+
+        # Loop through each department
+        for department in Department.objects.filter(is_active=True):
+            # Get teachers in the current department
+            teachers_in_dept = Teacher.objects.filter(dept_id=department)
+
+            if teachers_in_dept.exists():
+                # Calculate average student marks for each teacher in this department
+                teacher_performance = teachers_in_dept.annotate(
+                    avg_student_marks=Avg('student__total_marks')
+                )
+
+                # Find the teacher with the highest average marks
+                best_teacher = teacher_performance.order_by('-avg_student_marks').first()
+
+                # Add to result dictionary
+                if best_teacher:
+                    top_teachers[department.name] = {
+                        "teacher_name": best_teacher.name,
+                        "department": department.name,
+                        "average_marks": best_teacher.avg_student_marks
+                    }
+
+        return Response(top_teachers, status=status.HTTP_200_OK)

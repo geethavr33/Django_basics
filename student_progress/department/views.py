@@ -2,13 +2,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from app_student_progress.models import Department, Student
 from app_student_progress.serializer import Student_serializer
 from app_teacher.models import Teacher
 from app_teacher.serializer import Teacher_serializer
-from school.models import School
-from school.serializers import SchoolSerializer
 from .serializers import  DepartmentSerializer
 
 # Class to handle GET (List all departments)
@@ -61,15 +58,6 @@ class DepartmentDeleteView(APIView):
         except Department.DoesNotExist:
             return Response({'error': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
 
-class DepartmentDetailView(APIView):
-    # Get a department by ID (only active departments)
-    def get(self, request, dept_id):
-        try:
-            department = Department.active_objects.get(dept_id=dept_id)
-            serializer = DepartmentSerializer(department)
-            return Response(serializer.data)
-        except Department.DoesNotExist:
-            return Response({"error": "Department not found or inactive"}, status=status.HTTP_404_NOT_FOUND)
 
     # Update a department by ID
     def put(self, request, dept_id):
@@ -86,7 +74,7 @@ class DepartmentDetailView(APIView):
     # Delete a department by ID
     def delete(self, request, dept_id):
         try:
-            department = Department.active_objects.get(dept_id=dept_id)
+            department = Department.objects.get(dept_id=dept_id)
             department.is_active = False  # Soft delete
             department.save()
             return Response({"message": "Department deactivated"}, status=status.HTTP_204_NO_CONTENT)
@@ -96,7 +84,7 @@ class DepartmentDetailView(APIView):
 # Teachers under a specific Department (only active teachers)
 class TeachersUnderDepartmentView(APIView):
     def get(self, request, dept_id):
-        teachers = Teacher.active_objects.filter(depart_id=dept_id)
+        teachers = Teacher.objects.filter(dept_id=dept_id)
         serializer = Teacher_serializer(teachers, many=True)
         return Response({
             "count": teachers.count(),
@@ -106,41 +94,38 @@ class TeachersUnderDepartmentView(APIView):
 # Students under a specific Department (only active students)
 class StudentsUnderDepartmentView(APIView):
     def get(self, request, dept_id):
-        students = Student.active_objects.filter(teacher_id__depart_id=dept_id)
+        students = Student.objects.filter(teacher_id__dept_id=dept_id)
         serializer = Student_serializer(students, many=True)
         return Response({
             "count": students.count(),
             "active_students": serializer.data
         })
 
-# Department Details including HOD, Teachers, Students, and School (only active records)
-class DepartmentFullDetailView(APIView):
-    def get(self, request, dept_id):
-        try:
-            department = Department.active_objects.get(dept_id=dept_id)
-            hod = department.hod if department.hod.is_active else None
-            teachers = Teacher.active_objects.filter(depart_id=dept_id)
-            students = Student.active_objects.filter(teacher_id__depart_id=dept_id)
 
-            return Response({
-                "department": DepartmentSerializer(department).data,
-                "hod": Teacher_serializer(hod).data if hod else None,
-                "teachers": Teacher_serializer(teachers, many=True).data,
-                "students": Student_serializer(students, many=True).data,
-                "school": department.sc_id.name if department.sc_id else None
-            })
-        except Department.DoesNotExist:
-
-            return Response({"error": "Department not found or inactive"}, status=status.HTTP_404_NOT_FOUND)
-        
-
-# API to mark a department as inactive
 class InactivateDepartmentView(APIView):
     def put(self, request, department_id):
         try:
-            department = Department.objects.get(dept_id=department_id)
-            department.is_active = False
-            department.save()
-            return Response({"message": f"Department {department.name} marked as inactive."}, status=status.HTTP_200_OK)
-        except Department.DoesNotExist:
-            return Response({"error": "Department not found"}, status=status.HTTP_404_NOT_FOUND)
+            # Fetch the department and update its active status
+            updated_count = Department.objects.filter(dept_id=department_id).update(is_active=False)
+
+            # Check if any department was updated
+            if updated_count == 0:
+                return Response({"error": "Department not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Fetch the related teachers
+            teachers = Teacher.objects.filter(dept_id=department_id)
+
+            # Inactivate related teachers (if dept_id is a ForeignKey)
+            teachers.update(is_active=False)
+
+            # Clear the ManyToMany relationship (if applicable)
+            for teacher in teachers:
+                teacher.dept_id.clear()  # Remove all department links for this teacher
+
+            # Inactivate related students
+            Student.objects.filter(teacher_id__dept_id=department_id).update(teacher_id=None, is_active=False)
+
+            return Response({"message": "Department and all related entities marked as inactive."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/', include('matches.urls')),
     path('api/', include('subscriptions.urls')),
     path('api/', include('messaging.urls')),
+    path('api/', include('notifications.urls')),
 
 
 ]

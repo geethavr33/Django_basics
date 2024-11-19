@@ -1,6 +1,7 @@
 from django.db import models
 from user.models import User
 from mastercodes.models import MasterCode
+from django.core.exceptions import ValidationError
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -30,8 +31,9 @@ def save(self, *args, **kwargs):
     if self.caste and self.religion:
         valid_castes = MasterCode.objects.filter(type='Caste', parent_code=self.religion.code)
         if not valid_castes.filter(code=self.caste.code).exists():
-            raise ValueError(f"Caste '{self.caste.display_text}' is not valid for Religion '{self.religion.display_text}'.")
+            raise ValidationError(
+                f"Caste '{self.caste.display_text}' is not valid for Religion '{self.religion.display_text}'."
+            )
     super().save(*args, **kwargs)
-
-    def __str__(self):
+def __str__(self):
         return f"Profile of {self.user.username}"

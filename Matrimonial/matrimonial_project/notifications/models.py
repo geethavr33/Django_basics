@@ -1,5 +1,7 @@
 from django.db import models
 from user.models import User
+from messaging.models import Messaging
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     notification_type = models.CharField(max_length=50)

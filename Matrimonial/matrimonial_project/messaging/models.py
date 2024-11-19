@@ -1,6 +1,5 @@
 from django.db import models
 from user.models import User
-from matches.models import Matching
 
 class Messaging(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages_sent')

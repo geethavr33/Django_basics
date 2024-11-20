@@ -38,8 +38,8 @@ class MatchUsersAPIView(APIView):
                             user_profile.religion == user_preferences.religion and
                             user_profile.caste == user_preferences.caste and
                             # user_profile.profession == user_preferences.profession and
-                            # user_profile.height <= user_preferences.height and
-                            # user_profile.weight <= user_preferences.weight and
+                            #  user_profile.height <= user_preferences.height and
+                            #  user_profile.weight <= user_preferences.weight and
                             user_profile.education == user_preferences.education):
                             
                             match_score = calculate_match_score(user_preferences, user_profile)

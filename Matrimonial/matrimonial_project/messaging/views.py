@@ -5,31 +5,25 @@ from rest_framework import status
 from user.models import User
 from .models import Messaging
 from matches.models import Matching  
-
+from rest_framework.permissions import IsAdminUser
 from .serializers import MessagingSerializer
 from django.db import transaction
 
 class MatchMessageView(APIView):
     def post(self, request):
+        if not request.user.is_admin:
+            return Response({"error": "Only admins can send messages."}, status=status.HTTP_403_FORBIDDEN)
+
         match_id = request.data.get('match_id')
-        print(match_id)
-
         try:
-            # Fetch the accepted match
-            
             match = Matching.objects.get(id=match_id, status__iexact='accepted')
-
-            #match = Matching.objects.get(id=match_id, status='Accepted')
-            print(match)
-
             user1 = match.user1
             user2 = match.user2
             message_text = "Congratulations! You have a new match."
 
-            # Create messages using the serializer
             message_data = [
-                {"sender": user1.id, "receiver": user2.id, "message_text": message_text, "status": "Sent"},
-                {"sender": user2.id, "receiver": user1.id, "message_text": message_text, "status": "Sent"}
+                {"sender": request.user.id, "receiver": user1.id, "message_text": message_text, "status": "Sent"},
+                {"sender": request.user.id, "receiver": user2.id, "message_text": message_text, "status": "Sent"}
             ]
 
             with transaction.atomic():
@@ -38,8 +32,6 @@ class MatchMessageView(APIView):
                     if serializer.is_valid():
                         serializer.save()
                     else:
-                        print(serializer.errors)  # Log the errors for debugging
-
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({"message": "Messages sent successfully."}, status=status.HTTP_201_CREATED)
@@ -49,6 +41,28 @@ class MatchMessageView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class UserMessagesView(APIView):
+    """
+    Retrieve all messages for a specific user by ID.
+    """
+    permission_classes = [IsAdminUser]
+    def get(self, request, user_id):
+        if not request.user.is_admin:
+            return Response({"error": "Only admins can send messages."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            messages = Messaging.objects.filter(receiver_id=user_id)
+            
+            # Update the status of all "Sent" messages to "Read"
+            messages.filter(status='Sent').update(status='Read')
+
+            serializer = MessagingSerializer(messages, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class MatchMessagingView(APIView):
     """

@@ -23,9 +23,9 @@ This document provides detailed information on the API endpoints for the Matrimo
 ### User API Endpoints
 
 
-| Endpoint                                        | Method            | Description                                               |
-|-------------------------------------------------|-------------------|-----------------------------------------------------------|
-| `/api/user/create/`                                  | POST         |  create a new User record.       |
+| Endpoint                   | Method       | Description             |
+|----------------------------|--------------|------------------------|
+| `/api/user/create/`        | POST         |  create a new User record.                 |
 | `/api/user/`                                             |GET         |Retrive all users          |
 | `/api/users/<user_id>/`              | GET, PUT, DELETE  | Retrieve, update, or delete a user by ID.               |
 | `/api/login/`           | GET               | Login with username and password to create JWT Token      |
@@ -87,7 +87,7 @@ This document provides detailed information on the API endpoints for the Matrimo
 | `/api/mastercodes/`                                  | GET, POST         | Retrieve all master codes or create a new code.   |
 | `/mastercodes/<int:pk>/`              | GET, PUT, DELETE  | Retrieve, update, or delete a mastercode by ID.               |
 
-
+# 1.User App
 ## Authentication
 
 
@@ -98,11 +98,8 @@ Most endpoints require authentication via a token. Include the following header 
 
 ---
 
-## 1. User API
 
-### Endpoints:
-
-#### **1.1 Create User**
+## **1.1 Create User**
 - **POST** `/users/create/`
 
 **Request Body**:
@@ -118,399 +115,555 @@ Most endpoints require authentication via a token. Include the following header 
     "subscription_plan": "Basic",
     "status": "Active"
 }
-## Response:
+```
+* Response:
+    - Status 201: Created User
+    - Status 400: Validation error or missing required fields.
+```json
 {
   "message": "User registered successfully.",
   "user_id": 1
 }
-#### **1.2 Login**
-POST /users/login/
-Request Body:
+```
+## **1.2 Login**
+* POST /users/login/
+* Request Body:
+```json
 {
   "username": "devika",
   "password": "xyz123"
 }
+```
 Response:
+    - Status 200: Token generated
+    - Status 401: Invalid Credentials.
 
-json
+```json
 {
   "token": "JWT_TOKEN"
 }
+```
+## 1.3 Retrive ALL Users
+* GET/admin/user/
+* Response:
 
-8888888888888888888888888888888888888888888888888888888888888888888888888888888
-1.3 Update User
-PUT /users/update/{user_id}/
-Request Body:
-
-json
-Copy code
+```json
+ {
+        "id": 1,
+        "username": "geetha",
+        "email": "geetha@example.com",
+        "first_name": "geetha",
+        "last_name": "rajan",
+        "phone_no": "1234567890",
+        "joined_date": "2024-11-12",
+        "status": "Active",
+        "created_on": "2024-11-12T04:31:45.092594Z",
+        "updated_on": "2024-11-19T09:52:53.442736Z",
+        "last_login": null,
+        "is_active": true,
+        "is_admin": true,
+        "role": "Normal User"
+ }
+```
+## 1.4 Retrive User by ID
+* GET /api/user/{user_id}/
+* Response:
+   Status 200: Returns User with specific id.
+```json
 {
-  "first_name": "John",
-  "last_name": "Smith",
-  "phone_no": "0987654321",
-  "email": "johnsmith@example.com"
+    "id": 1,
+    "username": "geetha",
+    "email": "geetha@example.com",
+    "first_name": "geetha",
+    "last_name": "rajan",
+    "phone_no": "1234567890",
+    "joined_date": "2024-11-12",
+    "status": "Active",
+    "created_on": "2024-11-12T04:31:45.092594Z",
+    "updated_on": "2024-11-19T09:52:53.442736Z",
+    "last_login": null,
+    "is_active": true,
+    "is_admin": true,
+    "role": "Normal User"
 }
-Response:
+```
+## 1.5 Update User
+* PUT /users/{user_id}/
+* Request Body:
 
-json
-Copy code
+```json
+
+ {
+    "username": "geetha",
+    "email": "geetha@example.com",
+    "password": "xyz123",
+    "first_name": "geetha",
+    "last_name": "rajan",
+    "phone_no": "1234567890",
+    "role": "Normal User",
+    "subscription_plan": "Basic",
+    "status": "Active",
+    "is_admin":"True"
+}
+```
+* Response:
+
+    - Status 200: Updated student data.
+    - Status 400: Validation error or missing required fields.
+```json
 {
   "message": "User updated successfully."
 }
-1.4 Delete User
-DELETE /users/delete/{user_id}/
-Response:
+```
+## 1.6 Delete User
+* DELETE /user/{user_id}/
+* Response:
+Status 204: No content, successful deletion.
 
-json
-Copy code
+```json
 {
   "message": "User deleted successfully."
 }
-2. Profile API
-Endpoints:
-2.1 Create Profile
-POST /profiles/create/
-Request Body:
+```
 
-json
-Copy code
+### Models
+#### User
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `username`      | String       | Name of the user                                   |
+| `email`         | EmailField   | Email of user                                      |
+| `password`      | String       | Password of user                                   |
+| `first_name`    | String       | first name of user                                 |
+| `last_name`     | String       | last name of user                                  |
+| `phone_no`      | String       | Phone number of user                               |
+| `status`        | String       | Current status of user                             |
+| `role`          | String       | Role of the user(Normal user/Admin)                |
+| `joined_date`   | DateField    | Joined date                                        |
+| `last_login`    | DateTime     | Last login  date                                   |
+| `is_active`     |  Boolean     | User Active or not                                 |
+| `is_admin`      |  Boolean     | User Admin or not (Default-False)                  |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+
+# 2.Profile App
+## Endpoints:
+## 2.1 Create Profile
+* POST /profiles/
+* Request Body:
+
+```json
 {
-  "user_id": 1,
-  "age": 30,
-  "bio": "Looking for a partner.",
-  "weight": 70,
-  "height": 175,
-  "religion": "Hindu",
-  "caste": "Brahmin",
-  "profession": "Engineer",
-  "language": "English",
-  "education": "Bachelor's",
-  "address": "123 Street, City",
-  "income": 50000,
-  "marital_status": "Single",
-  "gender": "Male",
-  "date_of_birth": "1994-01-01"
+        "age": 25,
+        "bio": "Software developer with 10 years of experience.",
+        "weight": 76.0,
+        "height": 179.0,
+        "language": "Malayalam",
+        "address": "Soumya,pathanamthitta",
+        "created_on": "2024-11-12T10:45:08.394160Z",
+        "updated_on": "2024-11-12T10:50:46.922972Z",
+        "image": "/media/profile_images/pexels-italo-melo-2379005_KIHNKPj.jpg",
+        "marital_status": "single",
+        "status": "Active",
+        "family_details": "Living with parents",
+        "date_of_birth": "1999-11-25",
+        "deactivate": false,
+        "user": 1,
+        "religion": 1,# hindu
+        "caste": 13, # Brahmin
+        "education": 6,# Master
+        "gender": 30,# Female
+        "income": 10,# Medium
+        "profession": 25 # Engineer
+   
 }
-Response:
+```
 
-json
-Copy code
+* Response:
+    - Status 201: Created student record.
+    - Status 400: Validation error or missing required fields.
+
+## 2.2 Update Profile
+* PUT /profiles/{profile_id}/
+* Request Body:
+
+```json
 {
-  "message": "Profile created successfully.",
-  "profile_id": 1
+    "id": 6,
+    "age": 25,
+    "bio": "Teacherwith 5 years of experience.",
+    "weight": 59.0,
+    "height": 161.0,
+    "language": "Malayalam",
+    "address": "pta",
+    "created_on": "2024-11-14T09:26:16.385171Z",
+    "updated_on": "2024-11-20T05:42:02.599697Z",
+    "image": "/media/profile_images/pexels-italo-melo-2379005_FzwSdqJ.jpg",
+    "marital_status": "single",
+    "status": "Active",
+    "family_details": "Living with parents",
+    "date_of_birth": "1996-11-25",
+    "deactivate": false,
+    "user": 6,
+    "religion": 1,
+    "caste": 13,
+    "education": 5,
+    "gender": 30,
+    "income": 10,
+    "profession": 27
 }
-2.2 Update Profile
-PUT /profiles/update/{profile_id}/
-Request Body:
+```
+* Response:
+    - Status 201: Created student record.
+    - Status 400: Validation error or missing required fields.
 
-json
-Copy code
+
+## 2.3 Delete Profile
+* DELETE /profiles/delete/{profile_id}/
+* Response:
+  - Status 204: No content, successful deletion.
+  
+### Models
+#### Profile
+
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `user    `      | OneToOne     | ID of the user                                     |
+| `age  `         | Integer (+)  | age of user                                        |
+| `bio     `      | Text         | Bio of user                                        |
+| `weight`        | Float        | weight of user                                     |
+| `height`        | Float        | height of user                                     |
+| `religion`      | ForeignKey   | Religion code from mastercode                      |
+| `caste`         | ForeignKey   | caste code from mastercode                         |
+| `education`     | ForeignKey   | Education code from mastercode                     |
+| `gender`        | ForeignKey   | Gender code from mastercode                        |
+| `income`        | ForeignKey   | Income code from mastercode                        |
+| `profession`    | ForeignKey   | Profession code from mastercode                    |
+| `language`      | String       | language of user                                   |
+| `address`       | Text         | Address of user                                    |
+| `image`         | ImageField   | Image of user                                      |
+| `marital_status`| String       | Marital status of user                             |
+| `status`        | String       | Current status of user                             |
+| `family_details`| Text         | Family details of user                             |
+| `date_of_birth` | DateField    |  date of birth                                     |
+| `deactivate`    |  Boolean     | Deactivate user                                    |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+
+# 3. Preferences APP
+## Endpoints:
+## 3.1 Create Preferences
+* POST /preferences/
+* Request Body:
+
+```json
 {
-  "bio": "Looking for a life partner.",
-  "weight": 72,
-  "height": 177
+    "user": 11,
+    "age": "24-33",
+    "profession": 25,
+    "caste": 13,
+    "education": 6,
+    "location": "India,Us,Uk,USA,Australia",
+    "height": 161.0,
+    "weight": 59.0,
+    "income": 10,
+    "religion":1,
+    "gender": 29
 }
-Response:
+```
+* Response:
+    - Status 201: Created student record.
+    - Status 400: Validation error or missing required fields.
+  
+## 3.2 Update Preferences
+* PUT /preferences/{preferences_id}/
+* Request Body:
 
-json
-Copy code
+```json
 {
-  "message": "Profile updated successfully."
+        "id": 1,
+        "age": "22-29",
+        "location": "India,Us,Uk,USA,Australia",
+        "height": 175.0,
+        "weight": 70.0,
+        "created_on": "2024-11-12T10:57:48.945998Z",
+        "updated_on": "2024-11-12T10:57:48.946668Z",
+        "user": 2,
+        "caste": 13,
+        "education": 6,
+        "gender": 30,
+        "income": 10,
+        "profession": 25,
+        "religion": 1
 }
-2.3 Delete Profile
-DELETE /profiles/delete/{profile_id}/
-Response:
+  ```
+* Response:
 
-json
-Copy code
+    - Status 200: Updated User preferences data.
+    - Status 400: Validation error or missing required fields.
+
+## 3.3 Delete Preferences
+* DELETE /preferences/{preferences_id}/
+* Response:
+    - Status 204: No content, successful deletion.
+   
+### Models
+#### Preference
+
+
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `user    `      | OneToOne     | ID of the user                                     |
+| `age  `         | Integer (+)  | age of user                                        |
+| `weight`        | Float        | weight of user                                     |
+| `height`        | Float        | height of user                                     |
+| `religion`      | ForeignKey   | Religion code from mastercode                      |
+| `caste`         | ForeignKey   | caste code from mastercode                         |
+| `education`     | ForeignKey   | Education code from mastercode                     |
+| `gender`        | ForeignKey   | Gender code from mastercode                        |
+| `income`        | ForeignKey   | Income code from mastercode                        |
+| `profession`    | ForeignKey   | Profession code from mastercode                    |
+| `location`      | String       | location of user                                   |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+
+# 4.Matching APP
+## Endpoints:
+##  4.1 Create Match
+* POST /match/
+* Request Body:
+
+```json
 {
-  "message": "Profile deleted successfully."
+  "user_ids":[10]
 }
-3. Preferences API
-Endpoints:
-3.1 Create Preferences
-POST /preferences/create/
-Request Body:
+```
+* Response:
+    - Status 200: Match found succesfully.
+    - Status 404: Bad Request.
+    - Status 400: Validation error or missing required fields.
 
-json
-Copy code
+### Models
+#### Matching
+
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `user1`         | ForeignKey   | Name of the user1                                  |
+| `user2`         | ForeignKey   | Name of the user2                                  |
+| `match_score`   | Decimal      | Match score of users                               |
+| `status`        | String       | Match status                                       |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+
+
+# 5.Subscription APP
+## Endpoints:
+## 5.1 Create Subscription
+* POST /subscriptions/
+* Request Body:
+
+```json
 {
-  "user_id": 1,
-  "age": 28,
-  "profession": "Doctor",
-  "caste": "Brahmin",
-  "education": "Master's",
-  "location": "City",
-  "height": 170,
-  "weight": 65,
-  "income": 60000,
-  "religion": "Hindu",
-  "gender": "Female"
+   
+    "plan_type": "Premium"
 }
-Response:
+```
+* In Headers add key Authorization and value as token like this Token a542f2da1d0c79ed398e8862e582f17e3b744b9c
+* Response:
+    - Status 201: Created a new subscription.
+    - Status 400: Validation error or missing required fields.
 
-json
-Copy code
+## 5.2 Retrive Subscription
+* GET /subscription//
+* Response:
+    - Status 200: Returns a list of students, sorted by the specified subject marks.
+    - Status 404: If no students are found or the subject parameter is incorrect.
+
+
+### Models
+#### Subscription
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `user    `      | ForeignKey   | ID of the user                                     |
+| `plan_type`     | String       | plantype of user                                   |
+| `status`        | String       | Current status of user                             |
+| `start_date`    | DateTime     | Timestamp of record creation                       |
+| `end_date`      | DateTime     | Timestamp of last update                           |
+
+
+# 6.Message APP
+## Endpoints:
+## 6.1 Send Message
+* POST /send-matching-message/
+* Request Body:
+
+```json
 {
-  "message": "Preferences created successfully.",
-  "preferences_id": 1
+    "user1_id": 1,
+    "user2_id": 2
 }
-3.2 Update Preferences
-PUT /preferences/update/{preferences_id}/
-Request Body:
+```
+* In Headers add key- Authorization and value- as  Token a542f2da1d0c79ed398e8862e582f17e3b744b9c  for admin authorization
+* Response:
+    - Status 404: If no User are found or the User parameter is incorrect.
+    - Status 400: Validation error or missing required fields.
+    - Status 201: Message send to both users.
 
-json
-Copy code
+## 6.2 Retrive Message
+* GET /get-read-message/{message_id}/
+
+* Response:
+    - Status 200: Retrived message data.
+    - Status 404: User not found.
+    - Status 403: Only admins can send messages
+    - Status 500: Internal server error
+
+
+### Models
+#### Message
+
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `sender`        | ForeignKey   | Name of the sender                                 |
+| `receiver`      | ForeignKey   | Name of the  receiver                              |
+| `message_text`  | Text         | Message details                                    |
+| `status`        | String       | message read/unread status                         |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+# 7. Notification APP
+## Endpoints:
+## 7.1 Send Notification for Incomplete Profile
+* GET /notifications/incomplete-profile/{notification_id}/
+* In Headers add key- Authorization and value- as  Token a542f2da1d0c79ed398e8862e582f17e3b744b9c  for admin authorization
+* Response:
+    - Status 200: Send messages for incomplete profile
+  
+## 7.2 Send Notification for Unread messages
+* GET /notifications/unread-messages/{notification_id}/
+* In Headers add key- Authorization and value- as  Token a542f2da1d0c79ed398e8862e582f17e3b744b9c  for admin authorization
+* Response:
+    - Status 200: Send messages for Unread messages
+  
+## 7.3 Bulk Notification
+* POST /notifications/festival/
+* Request Body:
+
+```json
 {
-  "income": 65000
+  "festival_name": "Diwali",
+  "message": "Happy Diwali! May your life be filled with light and happiness.",
+  "user_ids": [1, 2, 3, 4]
 }
-Response:
+```
+* In Headers add key- Authorization and value- as  Token a542f2da1d0c79ed398e8862e582f17e3b744b9c  for admin authorization
+* Response:
+    - Status 201: Created a new subscription.
+    - Status 400: Validation error or missing required fields.
 
-json
-Copy code
-{
-  "message": "Preferences updated successfully."
-}
-3.3 Delete Preferences
-DELETE /preferences/delete/{preferences_id}/
-Response:
+## 7.4 Send Notification for Unread notifications
+* GET /notifications/unread/{notification_id}/
+* In Headers add key- Authorization and value- as  Token a542f2da1d0c79ed398e8862e582f17e3b744b9c  for admin authorization
+* Response:
+    - Status 200: Send messages for Unread notification
+  
 
-json
-Copy code
-{
-  "message": "Preferences deleted successfully."
-}
-4. Matching API
-Endpoints:
-4.1 Create Match
-POST /matching/create/
-Request Body:
+### Models
+#### Notification
 
-json
-Copy code
-{
-  "user1_id": 1,
-  "user2_id": 2,
-  "match_score": 80
-}
-Response:
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `user  `        | ForeignKey   | Name of the user                                   |
+|`notification_type`| String     | Notification type                             |
+| `message`       | Text         | Message details                                    |
+| `status`        | String       | message read/unread status                         |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
 
-json
-Copy code
-{
-  "message": "Match created successfully.",
-  "match_id": 1
-}
-4.2 Update Match Score
-PUT /matching/update/{match_id}/
-Request Body:
 
-json
-Copy code
-{
-  "match_score": 85
-}
-Response:
 
-json
-Copy code
-{
-  "message": "Match score updated successfully."
-}
-4.3 Delete Match
-DELETE /matching/delete/{match_id}/
-Response:
 
-json
-Copy code
-{
-  "message": "Match deleted successfully."
-}
-5. Subscription API
-Endpoints:
-5.1 Create Subscription
-POST /subscriptions/create/
-Request Body:
+# 8.Master Code APP
+## Endpoints:
+## 8.1 Create Master Code
+* POST /mastercodes/
+* Request Body:
 
-json
-Copy code
-{
-  "user_id": 1,
-  "plan_type": "Premium",
-  "start_date": "2024-01-01",
-  "end_date": "2025-01-01"
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Subscription created successfully.",
-  "subscription_id": 1
-}
-5.2 Update Subscription
-PUT /subscriptions/update/{subscription_id}/
-Request Body:
-
-json
-Copy code
-{
-  "plan_type": "Standard"
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Subscription updated successfully."
-}
-5.3 Delete Subscription
-DELETE /subscriptions/delete/{subscription_id}/
-Response:
-
-json
-Copy code
-{
-  "message": "Subscription deleted successfully."
-}
-6. Message API
-Endpoints:
-6.1 Send Message
-POST /messages/send/
-Request Body:
-
-json
-Copy code
-{
-  "sender_id": 1,
-  "receiver_id": 2,
-  "message_text": "Hello! How are you?"
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Message sent successfully.",
-  "message_id": 1
-}
-6.2 Update Message
-PUT /messages/update/{message_id}/
-Request Body:
-
-json
-Copy code
-{
-  "message_text": "Updated message text."
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Message updated successfully."
-}
-6.3 Delete Message
-DELETE /messages/delete/{message_id}/
-Response:
-
-json
-Copy code
-{
-  "message": "Message deleted successfully."
-}
-7. Notification API
-Endpoints:
-7.1 Send Notification
-POST /notifications/send/
-Request Body:
-
-json
-Copy code
-{
-  "user_id": 1,
-  "notification_type": "Match",
-  "message": "You have a new match!"
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Notification sent successfully.",
-  "notification_id": 1
-}
-7.2 Update Notification
-PUT /notifications/update/{notification_id}/
-Request Body:
-
-json
-Copy code
-{
-  "status": "Read"
-}
-Response:
-
-json
-Copy code
-{
-  "message": "Notification updated successfully."
-}
-7.3 Delete Notification
-DELETE /notifications/delete/{notification_id}/
-Response:
-
-json
-Copy code
-{
-  "message": "Notification deleted successfully."
-}
-8. Master Code API
-Endpoints:
-8.1 Create Master Code
-POST /mastercodes/create/
-Request Body:
-
-json
-Copy code
+```json
 {
   "type": "Religion",
   "code": "Hindu",
   "name": "Hindu",
   "display_text": "Hindu"
 }
-Response:
+```
+* Response:
+    - Status 201: Created a new MasterCode.
+    - Status 400: Validation error or missing required fields.
 
-json
-Copy code
-{
-  "message": "Master code created successfully.",
-  "master_code_id": 1
-}
-8.2 Update Master Code
-PUT /mastercodes/update/{master_code_id}/
-Request Body:
 
-json
-Copy code
-{
-  "display_text": "Hinduism"
-}
-Response:
+## 8.2 Update Master Code
+* PUT /mastercodes/{master_code_id}/
+* Request Body:
 
-json
-Copy code
+```json
+ {
+        "type": "caste",
+        "code": "menon",
+        "name": "Menon",
+        "display_text": "Menon",
+        "parent_code": 1
+ }
+ ```
+* Response:
+    - Status 404: If no details  found or the  details are incorrect.
+    - Status 400: Validation error or missing required fields.
+    - Status 200: Code successfully Updated.
+```json
 {
   "message": "Master code updated successfully."
 }
-8.3 Delete Master Code
-DELETE /mastercodes/delete/{master_code_id}/
-Response:
+```
+## 8.3 Delete Master Code
+* DELETE /mastercodes/{master_code_id}/
+*  Response:
+    - Status 204: No content, successful deletion.
 
-json
-Copy code
+```json
 {
   "message": "Master code deleted successfully."
 }
+```
+
+### Models
+#### Master code
+| Field           | Type         | Description                                           |
+|-----------------|--------------|-------------------------------------------------------|
+| `id`            | Integer      | Unique identifier for the user (auto-generated)    |
+| `type   `       | String       | type of data                                       |
+| `code`          |  String       | code of data                                      |
+| `name`          | String       | name of data                                       |
+| `display_text`  | String       | Display of code                                    |
+| `created_on`    | DateTime     | Timestamp of record creation                       |
+| `updated_on`    | DateTime     | Timestamp of last update                           |
+
+
+
+
 Conclusion
 This API documentation provides an overview of all

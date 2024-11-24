@@ -19,6 +19,8 @@ class CreateUser(APIView):
             return Response( serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+# Retrieve All User (GET) - Token  not Required
+ 
     def get(self, request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
